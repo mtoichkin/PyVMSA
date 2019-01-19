@@ -55,12 +55,12 @@ def Capture_ComputeResource(ComputeResource):
         cr_info = dict()
         cr_info.update(
             {'name': ComputeResource.name,
-             'totalCpu':  int(ComputeResource.summary.totalCpu//int(ComputeResource.summary.numCpuCores)),
+             'totalCpu':  int(ComputeResource.summary.totalCpu), #//int(ComputeResource.summary.numCpuCores)),
              'numCpuCores': int(ComputeResource.summary.numCpuCores),
              'numCpuThreads': int(ComputeResource.summary.numCpuThreads),
              'effectiveCpu': int(ComputeResource.summary.effectiveCpu),
-             'totalMemory': float(ComputeResource.summary.totalMemory) // 1073741824,
-             'effectiveMemory': float(ComputeResource.summary.effectiveMemory) // 1073741824,
+             'totalMemory': int(ComputeResource.summary.totalMemory), #// 1073741824,
+             'effectiveMemory': int(ComputeResource.summary.effectiveMemory), #// 1073741824,
              'overallStatus': ComputeResource.summary.overallStatus})
 
     except:
@@ -69,14 +69,16 @@ def Capture_ComputeResource(ComputeResource):
 
 def Capture_Network(host):
     net_info = dict()
-    # vim.host.PhysicalNic
-    net_info.update({'PhysicalNic': Capture_Network_PhysicalNic(host)})
-    # vim.host.VirtualNic
-    net_info.update({'VirtualNic': Capture_Network_VirtualNic(host)})
-    # vim.host.PortGroup
-    net_info.update({'PortGroup': Capture_Network_PortGroup(host)})
-    # vim.host.VirtualSwitch
-    net_info.update({'PortGroup': Capture_Network_VirtualSwitch(host)})
+
+    net_info.update(
+        {# vim.host.PhysicalNic
+         'PhysicalNic': Capture_Network_PhysicalNic(host),
+         # vim.host.VirtualNic
+         'VirtualNic': Capture_Network_VirtualNic(host),
+         # vim.host.PortGroup
+         'PortGroup': Capture_Network_PortGroup(host),
+         # vim.host.VirtualSwitch
+         'VirtualSwitch': Capture_Network_VirtualSwitch(host)})
     return net_info
 
 def Capture_Network_PhysicalNic(host):
@@ -153,6 +155,130 @@ def Capture_Network_VirtualSwitch(host):
         host_vswitches.append(vswitch_info)
     return host_vswitches
 
+def Capture_Datastore(host):
+    # Capture ESXi host Datastore
+    # vim.Datastore
+    host_datastore = []
+    for datastore in host.datastoreFolder.childEntity:
+        datastore_info = dict()
+        #print(datastore.info)
+        #print(datastore.capability)
+        #print(datastore.summary)
+        #print(dir(datastore))
+        datastore_info.update(
+            #vim.Datastore.Summary
+            # name
+            # The name of the datastore.
+            # url
+            # The unique locator for the datastore.
+            # capacity
+            # Maximum capacity of this datastore, in bytes. This value is updated periodically by the server.
+            # It can be explicitly refreshed with the Refresh operation. This property is guaranteed to be valid
+            # only if accessible is true.
+            # freeSpace
+            # Available space of this datastore, in bytes.
+            # type
+            # Type of file system volume, such as VMFS or NFS.
+            {'datastore': datastore.summary.datastore,
+             'name': datastore.summary.name,
+             'url': datastore.summary.url,
+             'capacity': int(datastore.summary.capacity),
+             'freeSpace': int(datastore.summary.freeSpace),
+             'type': datastore.summary.type})
+        host_datastore.append(datastore_info)
+    return host_datastore
+
+def Capture_VirtualMachine(host):
+    # Capture ESXi host VirtualMachine
+    # vim.VirtualMachine
+    host_virtualmachine = []
+    for vm in host.vmFolder.childEntity:
+        virtualmachine_info = dict()
+        # vim.VirtualMachine
+        virtualmachine_info.update(
+            {'name': vm.name,
+             # vim.vm.storage
+             'storage': Capture_VirtualMachine_storage(vm),
+             # vim.vm.GuestInfo
+             'GuestInfo': Capture_VirtualMachine_GuestInfo(vm),
+             # vim.vm.ConfigInfo
+             'ConfigInfo': Capture_VirtualMachine_ConfigInfo(vm)})
+        #print(dir(vm))
+        #print(vm.runtime)
+        #print(vm.summary)
+        host_virtualmachine.append(virtualmachine_info)
+    return host_virtualmachine
+
+def Capture_VirtualMachine_storage(vm):
+    # Capture VirtualMachine storage
+    # vm.storage
+    vm_storage = []
+    # vm.storage.perDatastoreUsage
+    for storage in vm.storage.perDatastoreUsage:
+        storage_info = dict()
+        storage_info.update(
+            {'datastore': storage.datastore,
+             'committed': storage.committed,
+             'uncommitted': storage.uncommitted,
+             'unshared': storage.unshared})
+        vm_storage.append(storage_info)
+    return vm_storage
+
+def Capture_VirtualMachine_GuestInfo(vm):
+    # Capture VirtualMachine GuestInfo
+    # vim.vm.GuestInfo
+    guestinfo_info = dict()
+    # vim.vm.GuestInfo.DiskInfo
+    vm_disk = []
+    for disk in vm.guest.disk:
+        vm_disk_info = dict()
+        vm_disk_info.update(
+            {'diskPath': disk.diskPath,
+             'capacity': disk.capacity,
+             'freeSpace': disk.freeSpace})
+        vm_disk.append(vm_disk_info)
+    #vim.vm.GuestInfo.NicInfo
+    if vm.guest.net is not None:
+        for net in vm.guest.net:
+            ipaddress = []
+            for ip in net.ipConfig.ipAddress:
+                ipaddress.append(str(ip.ipAddress)+'/'+str(ip.prefixLength))
+        else:
+            ipaddress = ['unset']
+    #vim.vm.GuestInfo.ipStack
+    if vm.guest.ipStack is not None:
+        for route in vm.guest.ipStack:
+            iproute = []
+            for ipr in route.ipRouteConfig.ipRoute:
+                iproute_info = dict()
+                iproute_info.update(
+                    {'ip_route': str(ipr.network)+'/'+str(ipr.prefixLength),
+                     'gateway': ipr.gateway.ipAddress})
+                iproute.append(iproute_info)
+        else:
+            iproute = ['unset']
+    guestinfo_info.update(
+        {'toolsStatus': vm.guest.toolsStatus,
+         'guestFullName': vm.guest.guestFullName,
+         'hostName': vm.guest.hostName,
+         'guestState': vm.guest.guestState,
+         'ipAddress': vm.guest.ipAddress,
+         'disk': vm_disk,
+         'ip': ipaddress,
+         'route': iproute})
+    return guestinfo_info
+
+def Capture_VirtualMachine_ConfigInfo(vm):
+    # Capture VirtualMachine ConfigInfo
+    # vim.vm.ConfigInfo
+    config_info = dict()
+    config_info.update(
+        {#vim.vm.ConfigInfo
+         #vim.vm.VirtualHardware
+         'numCPU': vm.config.hardware.numCPU,
+         'numCoresPerSocket': vm.config.hardware.numCoresPerSocket,
+         'memoryMB': vm.config.hardware.memoryMB})
+    return config_info
 
 def main():
     capture_host_info = []
@@ -176,19 +302,35 @@ def main():
             ## Datacenter
 
             for datacenter in ServiceInstance.content.rootFolder.childEntity:
-                print(datacenter)
+                ## print(datacenter.hostFolder.childEntity)
+                ## print(dir(datacenter))
 
-                #hostFolder
+                # vim.Datastore
+                capture_vm_host_info.update({'vim.Datastore': Capture_Datastore(datacenter)})
 
-                for computeresource in datacenter.hostFolder.childEntity:
-                    print("HOST", computeresource.name)
-                    capture_vm_host_info.update({'vim.ComputeResource': Capture_ComputeResource(computeresource)})
+                # vim.VirtualMachine
+                capture_vm_host_info.update({'vim.VirtualMachine': Capture_VirtualMachine(datacenter)})
 
-                    for host in computeresource.host:
-                        print(host)
-                        print(host.config.storageDevice)
-                        print(dir(host.config))
-                        capture_vm_host_info.update({'Network': Capture_Network(host)})
+                # hostFolder
+                for hostFolder in datacenter.hostFolder.childEntity:
+                    # vim.ComputeResource
+
+                    print("HOST", hostFolder.name)
+                    capture_vm_host_info.update({'vim.ComputeResource': Capture_ComputeResource(hostFolder)})
+
+                    for HostSystem in hostFolder.host:
+                    # vim.HostSystem
+
+                       ## print(HostSystem)
+                       ## print(host.config.storageDevice)
+                       ## print(dir(HostSystem.config))
+                        capture_vm_host_info.update({'Network': Capture_Network(HostSystem)})
+
+                #for networkFolder in datacenter.networkFolder.childEntity:
+                    # vim.Network
+
+
+
 
             capture_host_info.append(capture_vm_host_info)
 
