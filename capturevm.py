@@ -237,26 +237,8 @@ def Capture_VirtualMachine_GuestInfo(vm):
              'capacity': disk.capacity,
              'freeSpace': disk.freeSpace})
         vm_disk.append(vm_disk_info)
-    #vim.vm.GuestInfo.NicInfo
-    if vm.guest.net is not None:
-        for net in vm.guest.net:
-            ipaddress = []
-            for ip in net.ipConfig.ipAddress:
-                ipaddress.append(str(ip.ipAddress)+'/'+str(ip.prefixLength))
-        else:
-            ipaddress = ['unset']
-    #vim.vm.GuestInfo.ipStack
-    if vm.guest.ipStack is not None:
-        for route in vm.guest.ipStack:
-            iproute = []
-            for ipr in route.ipRouteConfig.ipRoute:
-                iproute_info = dict()
-                iproute_info.update(
-                    {'ip_route': str(ipr.network)+'/'+str(ipr.prefixLength),
-                     'gateway': ipr.gateway.ipAddress})
-                iproute.append(iproute_info)
-        else:
-            iproute = ['unset']
+
+
     guestinfo_info.update(
         {'toolsStatus': vm.guest.toolsStatus,
          'guestFullName': vm.guest.guestFullName,
@@ -264,9 +246,39 @@ def Capture_VirtualMachine_GuestInfo(vm):
          'guestState': vm.guest.guestState,
          'ipAddress': vm.guest.ipAddress,
          'disk': vm_disk,
-         'ip': ipaddress,
-         'route': iproute})
+         # vim.vm.GuestInfo.NicInfo
+         'ip': Capture_VirtualMachine_GuestInfo_net(vm),
+         #vim.vm.GuestInfo.ipStack
+         'route': Capture_VirtualMachine_GuestInfo_ipStack(vm)})
     return guestinfo_info
+
+def Capture_VirtualMachine_GuestInfo_net(vm):
+    # vim.vm.GuestInfo.NicInfo
+    try:
+        ipaddress = []
+        for net in vm.guest.net:
+                for ip in net.ipConfig.ipAddress:
+                    ipaddress.append(str(ip.ipAddress) + '/' + str(ip.prefixLength))
+    except:
+        ipaddress = ['unset']
+        return ipaddress
+    return ipaddress
+
+def Capture_VirtualMachine_GuestInfo_ipStack(vm):
+    #vim.vm.GuestInfo.ipStack
+    try:
+        iproute = []
+        for route in vm.guest.ipStack:
+            for ip in route.ipRouteConfig.ipRoute:
+                iproute_info = dict()
+                iproute_info.update(
+                    {'ip_route': str(ip.network)+'/'+str(ip.prefixLength),
+                     'gateway': ip.gateway.ipAddress})
+                iproute.append(iproute_info)
+    except:
+        iproute = ['unset']
+        return iproute
+    return iproute
 
 def Capture_VirtualMachine_ConfigInfo(vm):
     # Capture VirtualMachine ConfigInfo
