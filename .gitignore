@@ -3,3 +3,7 @@ venv/
 *.pyc
 cfg.py
 pyvenv.cfg
+myvenv/
+__pycache__
+db.sqlite3
+/static

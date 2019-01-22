@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <title>PyVMSA</title>
+    </head>
+    <body>
+        <div>
+            <h1>PyVMSA</h1>
+        </div>
+        {% for host in hosts %}
+            <div>
+                <h2>{{ host.host_ip }}</h2>
+                <p><b>Данные от: {{ host.created_date }}</b></p>
+                <p>About: {{ host.host_fullname }}, {{ host.host_ostype }}, {{ host.host_productlineid }}, {{ host.host_apiversion }} </p>
+                <p>Compute: {{ host.host_name }}, Total CPU: {{ host.host_totalcpu }}, CPU Cores: {{ host.host_numcpucores }}, CPU Threads {{ host.host_numcputhreads }}, Effective CPU: {{ host.host_effectivecpu }}</p>
+                <p>Total Memory: {{host.host_totalmemory }}, Effective Memory: {{ host.host_effectivememory }} </p>
+                <p>Overall Status: {{ host.host_overallstatus }}</p>
+                <p><b>Data Stores</b></p>
+                <table>
+                <tr><th>Name</th><th>Datastore</th><th>URL</th><th>Capacity</th><th>Free Space</th><th>Type</th></tr>
+                    {% for dtstr in host.datastore_set.all %}
+                    <tr><td>{{dtstr.name}}</td><td>{{dtstr.datastore}}</td><td>{{dtstr.url}}</td><td>{{dtstr.capacity}}</td><td>{{dtstr.freespace}}</td><td>{{dtstr.type}}</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+        {% endfor %}
+    </body>
+</html>
+
