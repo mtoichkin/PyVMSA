@@ -50,6 +50,15 @@ class Datastore(models.Model):
         return self.name
 
 
+class Virtualmachine(models.Model):
+    datastore = models.ManyToManyField('Datastore')
+    name = models.CharField(max_length=100)
+    numcpu = models.PositiveIntegerField()
+    numcorepersocket = models.PositiveIntegerField()
+    memorymb = models.PositiveIntegerField()
+
+    def __str__(self):
+        return self.name
 
 
 

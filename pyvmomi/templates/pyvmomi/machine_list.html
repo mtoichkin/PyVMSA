@@ -21,6 +21,11 @@
                     <tr><td>{{dtstr.name}}</td><td>{{dtstr.datastore}}</td><td>{{dtstr.url}}</td><td>{{dtstr.capacity}}</td><td>{{dtstr.freespace}}</td><td>{{dtstr.type}}</td></tr>
                     {% endfor %}
                 </table>
+                {% for dstr in host.datastore_set.all %}
+                    {% for vm in dstr.virtualmachine_set.all %}
+                        <li>{{vm}}</li>
+                    {% endfor %}
+                {% endfor %}
             </div>
         {% endfor %}
     </body>
