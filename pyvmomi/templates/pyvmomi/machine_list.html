@@ -23,7 +23,7 @@
                 </table>
                 {% for dstr in host.datastore_set.all %}
                     {% for vm in dstr.virtualmachine_set.all %}
-                        <li>{{vm}}</li>
+                        <li><a href="{% url 'machine_detail' pk=vm.pk %}">{{ vm }}</a></li>
                     {% endfor %}
                 {% endfor %}
             </div>
