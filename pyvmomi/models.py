@@ -52,7 +52,12 @@ class Datastore(models.Model):
 
 class Virtualmachine(models.Model):
     datastore = models.ManyToManyField('Datastore')
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, default='N/A')
+    toolsStatus = models.CharField(max_length=100, default='N/A')
+    guestFullName = models.CharField(max_length=200, default='N/A')
+    hostName = models.CharField(max_length=100, default='N/A')
+    guestState = models.CharField(max_length=50, default='N/A')
+    ipAddress = models.CharField(max_length=100, default='N/A')
     numcpu = models.PositiveIntegerField()
     numcorepersocket = models.PositiveIntegerField()
     memorymb = models.PositiveIntegerField()
@@ -60,6 +65,24 @@ class Virtualmachine(models.Model):
     def __str__(self):
         return self.name
 
+
+class Disk(models.Model):
+    virtualmachine = models.ForeignKey('Virtualmachine', on_delete=models.CASCADE)
+    discpath = models.CharField(max_length=100, default='N/A')
+    capacity = models.BigIntegerField()
+    freespace = models.BigIntegerField()
+
+    def __str__(self):
+        return self.discpath
+
+
+class Route(models.Model):
+    virtualmachine = models.ForeignKey('Virtualmachine', on_delete=models.CASCADE)
+    iproute = models.CharField(max_length=100, default='N/A')
+    gateway = models.CharField(max_length=100, default='N/A')
+
+    def __str__(self):
+        return self.iproute
 
 
 

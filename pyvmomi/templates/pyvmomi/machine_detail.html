@@ -6,7 +6,25 @@
         <div>
             <h1>Virtual Machine {{machine}}</h1>
         </div>
+        <h2>Guest Information</h2>
+        <p><b>Tool Status: </b>{{machine.toolsStatus}}</p>
+        <p><b>Guest Full Name: </b>{{machine.guestFullName}}</p>
+        <p><b>Host Name: </b>{{machine.hostName}}</p>
+        <p><b>Guest State: </b>{{machine.guestState}}</p>
+        <p><b>IP Address: </b>{{machine.ipAddress}}</p>
+        <table>
+            <tr><th>Disc Path</th><th>Capacity</th><th>Free Space</th></tr>
+            {% for disc in machine.disk_set.all %}
+                <tr><td>{{disc.discpath}}</td><td>{{disc.capacity}}</td><td>{{disc.freespace}}</td></tr>
+            {% endfor %}
+         </table>
+        <table>
+            <tr><th>IP Route</th><th>Gateway</th></tr>
+            {% for route in machine.route_set.all %}
+                <tr><td>{{route.iproute}}</td><td>{{route.gateway}}</td></tr>
+            {% endfor %}
+         </table>
+        <h2>Configuration Information</h2>
         <p><b>CPU Number:</b> {{machine.numcpu}} | <b>Cores per Socket:</b> {{machine.numcorepersocket}} | <b>Memory (MB):</b> {{machine.memorymb}}</p>
-
     </body>
 </html>
