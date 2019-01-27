@@ -21,6 +21,19 @@
                     <tr><td>{{dtstr.name}}</td><td>{{dtstr.datastore}}</td><td>{{dtstr.url}}</td><td>{{dtstr.capacity}}</td><td>{{dtstr.freespace}}</td><td>{{dtstr.type}}</td></tr>
                     {% endfor %}
                 </table>
+               <p><b>Virtual Machines</b></p>
+                {% for vswitch in host.virtualswitch_set.all %}
+                    <p>Virtual Switch: Name: {{ vswitch.name }}, MTU {{vswitch.mtu}}</p>
+                    <p>Physical Nic</p>
+                    {% for pnick in vswitch.physicalnick_set.all %}
+                        <li>{{pnick.device}}: <b>Driver: </b> {{pnick.driver}} | <b>MAC: </b> {{pnick.mac}} | <b>Speed MB: </b> {{pnick.speedmb}} | <b>Duplex: </b> {{pnick.duplex}}</li>
+                    {% endfor %}
+                    <p>Port Groups</p>
+                    {% for vnick in vswitch.portgroup_set.all %}
+                        <li>{{vnick.name}}: <b>VLAN ID: </b> {{vnick.vlanid}}</li>
+                        <p>Virtual Nic: <b>Device: </b> {{vnick.device}} | <b>DHCP: </b> {{vnick.dhcp}} | <b>IP Address: </b> {{vnick.ipaddress}} | <b>Subnet Mask: </b> {{vnick.subnetmask}} | <b>MAC: </b> {{vnick.mac}}</p>
+                    {% endfor %}
+                {% endfor %}
                 {% for dstr in host.datastore_set.all %}
                     {% for vm in dstr.virtualmachine_set.all %}
                         <li><a href="{% url 'machine_detail' pk=vm.pk %}">{{ vm }}</a></li>

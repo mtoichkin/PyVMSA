@@ -85,5 +85,30 @@ class Route(models.Model):
         return self.iproute
 
 
+class Physicalnick(models.Model):
+    virtualswitch = models.ForeignKey('Virtualswitch', on_delete=models.CASCADE)
+    device = models.CharField(max_length=100, default='N/A')
+    driver = models.CharField(max_length=100, default='N/A')
+    mac = models.CharField(max_length=100, default='N/A')
+    speedmb = models.CharField(max_length=100, default='N/A')
+    duplex = models.CharField(max_length=100, default='N/A')
+
+    def __str__(self):
+        return self.device
+
+
+class Portgroup(models.Model):
+    virtualswitch = models.ForeignKey('Virtualswitch', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, default='N/A')
+    vlanid = models.PositiveIntegerField()
+    device = models.CharField(max_length=100, default='N/A')
+    dhcp = models.CharField(max_length=100, default='N/A')
+    ipaddress = models.CharField(max_length=100, default='N/A')
+    subnetmask = models.CharField(max_length=100, default='N/A')
+    mac = models.CharField(max_length=100, default='N/A')
+
+    def __str__(self):
+        return self.name
+
 
 
