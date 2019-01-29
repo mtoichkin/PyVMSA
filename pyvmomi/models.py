@@ -4,19 +4,19 @@ from django.utils import timezone
 
 # Create your models here.
 class Host(models.Model):
-    host_ip = models.CharField(max_length=200)
-    host_fullname = models.CharField(max_length=100)
-    host_ostype = models.CharField(max_length=100)
-    host_productlineid = models.CharField(max_length=100)
-    host_apiversion = models.CharField(max_length=50)
-    host_name = models.CharField(max_length=100)
-    host_totalcpu = models.PositiveIntegerField()
-    host_numcpucores = models.PositiveIntegerField()
-    host_numcputhreads = models.PositiveIntegerField()
-    host_effectivecpu = models.PositiveIntegerField()
-    host_totalmemory = models.PositiveIntegerField()
-    host_effectivememory = models.PositiveIntegerField()
-    host_overallstatus = models.CharField(max_length=50)
+    host_ip = models.CharField(max_length=200, default='')
+    host_fullname = models.CharField(max_length=100, default='')
+    host_ostype = models.CharField(max_length=100, default='')
+    host_productlineid = models.CharField(max_length=100, default='')
+    host_apiversion = models.CharField(max_length=50, default='')
+    host_name = models.CharField(max_length=100, default='')
+    host_totalcpu = models.PositiveIntegerField(default=0)
+    host_numcpucores = models.PositiveIntegerField(default=0)
+    host_numcputhreads = models.PositiveIntegerField(default=0)
+    host_effectivecpu = models.PositiveIntegerField(default=0)
+    host_totalmemory = models.PositiveIntegerField(default=0)
+    host_effectivememory = models.PositiveIntegerField(default=0)
+    host_overallstatus = models.CharField(max_length=50, default='')
     created_date = models.DateTimeField(
             default=timezone.now)
 
@@ -30,7 +30,7 @@ class Host(models.Model):
 
 class Virtualswitch(models.Model):
     host = models.ForeignKey('Host', on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, default='')
     mtu = models.PositiveIntegerField()
 
     def __str__(self):
