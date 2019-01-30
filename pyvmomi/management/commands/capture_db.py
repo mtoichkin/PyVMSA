@@ -1,33 +1,39 @@
-import os, ssl, django
+import ssl
+from django.core.management.base import BaseCommand
 from pyVim.connect import SmartConnect, Disconnect
-
 from cfg import ip_vm_host_list, vm_user, vm_pwd
+from pyvmomi.models import *
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pyvmsa.settings")
-django.setup()
-from pyvmomi.models import Host
 
-def Connect_VM_Host(vm_host,vm_user,vm_pwd):
+class Command(BaseCommand):
+    help = 'Capture DB'
+
+    def handle(self, *args, **options):
+        capture_db()
+
+
+def connect_vm_host(vm_host, vm_user, vm_pwd):
+
     s = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
     s.verify_mode = ssl.CERT_NONE
     try:
         print("Host: {} Connect...".format(vm_host))
-        ServiceInstance = SmartConnect(host=vm_host, user=vm_user, pwd=vm_pwd)
+        service_instance = SmartConnect(host=vm_host, user=vm_user, pwd=vm_pwd)
         print('Host: {} Valid certificate'.format(vm_host))
     except ssl.SSLError:
         try:
-            ServiceInstance = SmartConnect(host=vm_host, user=vm_user, pwd=vm_pwd, sslContext=s)
+            service_instance = SmartConnect(host=vm_host, user=vm_user, pwd=vm_pwd, sslContext=s)
             print('Host: {} Invalid or untrusted certificate'.format(vm_host))
         except:
             return print("Host:{} Invalid Login".format(vm_host))
     except:
         return print("Host: {} Connect failed".format(vm_host))
-    return ServiceInstance
+    return service_instance
 
-def Capture_DB_Host(vm_host, ServiceInstance):
+def capture_db_host(vm_host, service_instance):
     try:
-        db_Host = Host()
-        db_Host.host_ip = vm_host
+        db_host = Host()
+        db_host.host_ip = vm_host
 
         # vim.AboutInfo:
         #
@@ -51,18 +57,18 @@ def Capture_DB_Host(vm_host, ServiceInstance):
         #   The version of the API as a dot-separated string.
         #
 
-        db_Host.host_fullname = ServiceInstance.content.about.fullName
-        db_Host.host_ostype = ServiceInstance.content.about.osType
-        db_Host.host_productlineid = ServiceInstance.content.about.productLineId
-        db_Host.host_apiversion = ServiceInstance.content.about.apiVersion
+        db_host.host_fullname = service_instance.content.about.fullName
+        db_host.host_ostype = service_instance.content.about.osType
+        db_host.host_productlineid = service_instance.content.about.productLineId
+        db_host.host_apiversion = service_instance.content.about.apiVersion
 
-        for datacenter in ServiceInstance.content.rootFolder.childEntity:
+        for datacenter in service_instance.content.rootFolder.childEntity:
 
-            for hostFolder in datacenter.hostFolder.childEntity:
+            for hostfolder in datacenter.hostFolder.childEntity:
 
-                print("Host name: {}".format(hostFolder.name))
+                print("Host name: {}".format(hostfolder.name))
 
-                db_Host.host_name = hostFolder.name
+                db_host.host_name = hostfolder.name
 
                 # vim.ComputeResource
                 #
@@ -101,33 +107,33 @@ def Capture_DB_Host(vm_host, ServiceInstance):
                 #  Aggregated memory resources of all hosts, in bytes.
                 #
 
-                db_Host.host_effectivecpu = int(hostFolder.summary.effectiveCpu)
-                db_Host.host_effectivememory = int(hostFolder.summary.effectiveMemory) / 1073741824
-                db_Host.host_numcpucores = hostFolder.summary.numCpuCores
-                db_Host.host_numcputhreads = int(hostFolder.summary.numCpuThreads)
-                db_Host.host_overallstatus = hostFolder.summary.overallStatus
+                db_host.host_effectivecpu = int(hostfolder.summary.effectiveCpu)
+                db_host.host_effectivememory = int(hostfolder.summary.effectiveMemory) / 1073741824
+                db_host.host_numcpucores = hostfolder.summary.numCpuCores
+                db_host.host_numcputhreads = int(hostfolder.summary.numCpuThreads)
+                db_host.host_overallstatus = hostfolder.summary.overallStatus
+                db_host.host_totalcpu = hostfolder.summary.totalCpu
+                db_host.host_totalmemory = int(hostfolder.summary.totalMemory)/1073741824
+                print("db_host.save")
+                db_host.save()
 
-                db_Host.host_totalcpu = hostFolder.summary.totalCpu
-                db_Host.host_totalmemory = int(hostFolder.summary.totalMemory)/1073741824
+    except type:
+        print('failed  capture_db_host')
+    return db_host
 
 
-    except:
-        print('failed  Capture_DB_Host')
-    return db_Host.save()
-
-
-def Capture_DB():
+def capture_db():
     for vm_host in ip_vm_host_list:
 
-        service_instance = Connect_VM_Host(vm_host, vm_user, vm_pwd)
+        service_instance = connect_vm_host(vm_host, vm_user, vm_pwd)
 
         if service_instance is None:
             print("Host:{} skip".format(vm_host))
         else:
-            Capture_DB_Host(vm_host, service_instance)
+            db_host = capture_db_host(vm_host, service_instance)
 
+    print(db_host)
     Disconnect(service_instance)
 
     return print('Ok')
 
-Capture_DB()
