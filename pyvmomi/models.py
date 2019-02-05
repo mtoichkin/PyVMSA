@@ -42,8 +42,8 @@ class Datastore(models.Model):
     datastore = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     url = models.CharField(max_length=100)
-    capacity = models.PositiveIntegerField()
-    freespace = models.PositiveIntegerField()
+    capacity = models.PositiveIntegerField(default=0)
+    freespace = models.PositiveIntegerField(default=0)
     type = models.CharField(max_length=100)
 
     def __str__(self):

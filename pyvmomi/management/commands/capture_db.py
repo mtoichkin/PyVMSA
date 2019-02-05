@@ -73,26 +73,26 @@ def capture_db_host(vm_host, service_instance):
                 # vim.ComputeResource
                 #
                 # effectiveCpu:
-                #  Effective CPU resources (in MHz) available to run virtual machines. This is the aggregated effective
-                # resource level from all running hosts. Hosts that are in maintenance mode or are unresponsive are not
-                # counted. Resources used by the VMware Service Console are not included in the aggregate. This value
-                # represents the amount of resources available for the root resource pool for running virtual machines.
+                #   Effective CPU resources (in MHz) available to run virtual machines. This is the aggregated effective
+                #  resource level from all running hosts. Hosts that are in maintenance mode or are unresponsive are not
+                #  counted. Resources used by the VMware Service Console are not included in the aggregate. This value
+                #  represents the amount of resources available for the root resource pool for running virtual machines.
                 #
                 # effectiveMemory:
-                #  Effective memory resources (in MB) available to run virtual machines. This is the aggregated
-                # effective resource level from all running hosts. Hosts that are in maintenance mode or are
-                # unresponsive are not counted. Resources used by the VMware Service Console are not included in the
-                # aggregate. This value represents the amount of resources available for the root resource pool for
-                # running virtual machines.
+                #   Effective memory resources (in MB) available to run virtual machines. This is the aggregated
+                #  effective resource level from all running hosts. Hosts that are in maintenance mode or are
+                #  unresponsive are not counted. Resources used by the VMware Service Console are not included in the
+                #  aggregate. This value represents the amount of resources available for the root resource pool for
+                #  running virtual machines.
                 #
                 # numCpuCores:
-                #  Number of physical CPU cores. Physical CPU cores are the processors contained by a CPU package.
+                #   Number of physical CPU cores. Physical CPU cores are the processors contained by a CPU package.
                 #
                 # numCpuThreads:
-                #  Aggregated number of CPU threads.
+                #   Aggregated number of CPU threads.
                 #
                 # overallStatus:
-                #  Overall alarm status. In releases after vSphere API 5.0, vSphere Servers might not generate property
+                #   Overall alarm status. In releases after vSphere API 5.0, vSphere Servers might not generate property
                 #  collector update notifications for this property. To obtain the latest value of the property, you can
                 #  use PropertyCollector methods RetrievePropertiesEx or WaitForUpdatesEx. If you use the
                 #  PropertyCollector.WaitForUpdatesEx method, specify an empty string for the version parameter. Since
@@ -101,10 +101,10 @@ def capture_db_host(vm_host, service_instance):
                 #  WaitForUpdatesEx with a non-empty version parameter, the value for this property may not be current.
                 #
                 # totalCpu:
-                #  Aggregated CPU resources of all hosts, in MHz.
+                #   Aggregated CPU resources of all hosts, in MHz.
                 #
                 # totalMemory:
-                #  Aggregated memory resources of all hosts, in bytes.
+                #   Aggregated memory resources of all hosts, in bytes.
                 #
 
                 db_host.host_effectivecpu = int(hostfolder.summary.effectiveCpu)
@@ -121,6 +121,87 @@ def capture_db_host(vm_host, service_instance):
         print('failed  capture_db_host')
     return db_host
 
+def capture_db_datacenter(db_host, service_instance):
+    try:
+        # Capture ESXi host Datastore
+        # vim.Datastore
+        #
+        # vim.Datastore.Summary
+        #
+        # name:
+        #   The name of the datastore.
+        #
+        # url:
+        #   The unique locator for the datastore.
+        #
+        # capacity:
+        #   Maximum capacity of this datastore, in bytes. This value is updated periodically by the server.
+        #  It can be explicitly refreshed with the Refresh operation. This property is guaranteed to be valid
+        #  only if accessible is true.
+        #
+        # freeSpace:
+        #   Available space of this datastore, in bytes.
+        #
+        # type:
+        #   Type of file system volume, such as VMFS or NFS.
+        #
+
+        for datacenter in service_instance.content.rootFolder.childEntity:
+
+            for datastore in datacenter.datastoreFolder.childEntity:
+
+                db_datastore = Datastore()
+                db_datastore.host = db_host
+                db_datastore.datastore = str(datastore.summary.datastore).replace('vim.Datastore:', '')
+                db_datastore.name = datastore.summary.name
+                db_datastore.url = datastore.summary.url
+                db_datastore.capacity = int(datastore.summary.capacity)
+                db_datastore.freespace = int(datastore.summary.freeSpace)
+                db_datastore.type = datastore.summary.type
+                print("db_datastore.save")
+                db_datastore.save()
+
+    except type:
+        print('failed  capture_db_datacenter')
+    return
+
+def capture_db_network(db_host, service_instance):
+    try:
+        for datacenter in service_instance.content.rootFolder.childEntity:
+
+            for hostfolder in datacenter.hostFolder.childEntity:
+
+                for hostsystem in hostfolder.host:
+                    host_vswitches = []
+                    for vswitch in hostsystem.config.network.vswitch:
+
+                        db_virtualswitch = Virtualswitch()
+                        db_virtualswitch.host = db_host
+                        db_virtualswitch.name = vswitch.name
+                        db_virtualswitch.mtu = vswitch.mtu
+                        print("db_virtualswitch.save")
+                        db_virtualswitch.save()
+                        print(db_virtualswitch.id)
+
+                        vswitch_info = dict()
+                        vswitch_pnics = []
+                        vswitch_portgroups = []
+
+                        for pnic in vswitch.pnic:
+                            pnic = pnic.replace('key-vim.host.PhysicalNic-', '')
+                            vswitch_pnics.append(pnic)
+                        for portgroup in vswitch.portgroup:
+                            portgroup = portgroup.replace('key-vim.host.PortGroup-', '')
+                            vswitch_portgroups.append(portgroup)
+
+                        vswitch_info.update(
+                            {'id': db_virtualswitch.id,
+                             'pnics': vswitch_pnics,
+                             'portgroups': vswitch_portgroups})
+        print(vswitch_info)
+    except type:
+        print('failed  capture_db_network')
+    return
 
 def capture_db():
     for vm_host in ip_vm_host_list:
@@ -131,6 +212,8 @@ def capture_db():
             print("Host:{} skip".format(vm_host))
         else:
             db_host = capture_db_host(vm_host, service_instance)
+            capture_db_datacenter(db_host, service_instance)
+            capture_db_network(db_host, service_instance)
 
     print(db_host)
     Disconnect(service_instance)
