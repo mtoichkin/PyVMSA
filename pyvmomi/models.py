@@ -42,8 +42,8 @@ class Datastore(models.Model):
     datastore = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     url = models.CharField(max_length=100)
-    capacity = models.PositiveIntegerField(default=0)
-    freespace = models.PositiveIntegerField(default=0)
+    capacity = models.PositiveIntegerField()
+    freespace = models.PositiveIntegerField()
     type = models.CharField(max_length=100)
 
     def __str__(self):
@@ -51,19 +51,27 @@ class Datastore(models.Model):
 
 
 class Virtualmachine(models.Model):
-    datastore = models.ManyToManyField('Datastore')
+    datastore = models.ManyToManyField(Datastore, through='Storage', through_fields=('virtualmachine', 'datastore'))
     name = models.CharField(max_length=100, default='N/A')
     toolsStatus = models.CharField(max_length=100, default='N/A')
     guestFullName = models.CharField(max_length=200, default='N/A')
     hostName = models.CharField(max_length=100, default='N/A')
     guestState = models.CharField(max_length=50, default='N/A')
     ipAddress = models.CharField(max_length=100, default='N/A')
-    numcpu = models.PositiveIntegerField()
-    numcorepersocket = models.PositiveIntegerField()
-    memorymb = models.PositiveIntegerField()
+    numcpu = models.PositiveIntegerField(default=0)
+    numcorepersocket = models.PositiveIntegerField(default=0)
+    memorymb = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.name
+
+
+class Storage(models.Model):
+    virtualmachine = models.ForeignKey(Virtualmachine, on_delete=models.CASCADE)
+    datastore = models.ForeignKey(Datastore, on_delete=models.CASCADE)
+    committed = models.BigIntegerField(default=0)
+    uncommitted = models.BigIntegerField(default=0)
+    unshared = models.BigIntegerField(default=0)
 
 
 class Disk(models.Model):
