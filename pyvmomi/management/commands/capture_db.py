@@ -172,8 +172,17 @@ def capture_db_network(db_host, service_instance):
             for hostfolder in datacenter.hostFolder.childEntity:
 
                 for hostsystem in hostfolder.host:
-                    host_vswitches = []
+
+                    hostsystem_vswitchs = []
+
+                    # Virtualswitch
+
                     for vswitch in hostsystem.config.network.vswitch:
+
+                        vswitch_info = dict()
+                        vswitch_pnics = []
+                        vswitch_portgroups = []
+
 
                         db_virtualswitch = Virtualswitch()
                         db_virtualswitch.host = db_host
@@ -181,24 +190,55 @@ def capture_db_network(db_host, service_instance):
                         db_virtualswitch.mtu = vswitch.mtu
                         print("db_virtualswitch.save")
                         db_virtualswitch.save()
-                        print(db_virtualswitch.id)
-
-                        vswitch_info = dict()
-                        vswitch_pnics = []
-                        vswitch_portgroups = []
 
                         for pnic in vswitch.pnic:
                             pnic = pnic.replace('key-vim.host.PhysicalNic-', '')
                             vswitch_pnics.append(pnic)
+
                         for portgroup in vswitch.portgroup:
                             portgroup = portgroup.replace('key-vim.host.PortGroup-', '')
                             vswitch_portgroups.append(portgroup)
 
-                        vswitch_info.update(
-                            {'id': db_virtualswitch.id,
-                             'pnics': vswitch_pnics,
-                             'portgroups': vswitch_portgroups})
-        print(vswitch_info)
+                        vswitch_info.update({'id': db_virtualswitch,
+                                             'pnics': vswitch_pnics,
+                                             'portgroups': vswitch_portgroups})
+
+                        hostsystem_vswitchs.append(vswitch_info)
+
+                    # Physicalnick
+
+                    for pnic in hostsystem.config.network.pnic:
+
+                        db_pnic = Physicalnick()
+                        db_pnic.device = pnic.device
+                        db_pnic.driver = pnic.driver
+                        db_pnic.mac = pnic.mac
+
+                        # Capture linkSpeed
+
+                        try:
+                            if pnic.spec.linkSpeed is not None:
+                                db_pnic.speedmb = pnic.spec.linkSpeed.speedMb
+                                db_pnic.duplex = pnic.spec.linkSpeed.duplex
+                            else:
+                                db_pnic.speedmb = 'unset'
+                                db_pnic.duplex = 'unset'
+                        except:
+                            print('failed get pnic.spec.linkSpeed')
+
+                        for vswitchs in hostsystem_vswitchs:
+                            for pnics in vswitchs.get('pnics'):
+                                if pnics == pnic.device:
+                                    db_pnic.virtualswitch = vswitchs.get('id')
+
+                        db_pnic.save()
+
+                    # Portgroup
+
+
+
+
+        print(hostsystem_vswitchs)
     except type:
         print('failed  capture_db_network')
     return
