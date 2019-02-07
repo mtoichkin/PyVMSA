@@ -231,14 +231,41 @@ def capture_db_network(db_host, service_instance):
                                 if pnics == pnic.device:
                                     db_pnic.virtualswitch = vswitchs.get('id')
 
+                        print("db_pnic.save")
                         db_pnic.save()
 
-                    # Portgroup
+                    # Portgroup & virtual nics
+
+                    for portgroup in hostsystem.config.network.portgroup:
 
 
 
+                        # Portgroup
 
-        print(hostsystem_vswitchs)
+                        db_portgroup = Portgroup()
+                        db_portgroup.name = portgroup.spec.name
+                        db_portgroup.vlanid = portgroup.spec.vlanId
+
+                        for vswitchs in hostsystem_vswitchs:
+                            for portgroups in vswitchs.get('portgroups'):
+                                if portgroups == portgroup.spec.name:
+                                    db_portgroup.virtualswitch = vswitchs.get('id')
+
+                        # Virtual nics
+
+                        for vnic in hostsystem.config.network.vnic:
+
+                            if portgroup.spec.name == vnic.portgroup:
+
+                                db_portgroup.device = vnic.device
+                                db_portgroup.dhcp = vnic.spec.ip.dhcp
+                                db_portgroup.ipaddress = vnic.spec.ip.ipAddress
+                                db_portgroup.subnetmask = vnic.spec.ip.subnetMask
+                                db_portgroup.mac = vnic.spec.mac
+
+                        print("db_portgroup.save()")
+                        db_portgroup.save()
+
     except type:
         print('failed  capture_db_network')
     return

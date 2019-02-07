@@ -108,7 +108,7 @@ class Physicalnick(models.Model):
 class Portgroup(models.Model):
     virtualswitch = models.ForeignKey('Virtualswitch', on_delete=models.CASCADE)
     name = models.CharField(max_length=100, default='N/A')
-    vlanid = models.PositiveIntegerField()
+    vlanid = models.PositiveIntegerField(default=0)
     device = models.CharField(max_length=100, default='N/A')
     dhcp = models.CharField(max_length=100, default='N/A')
     ipaddress = models.CharField(max_length=100, default='N/A')
