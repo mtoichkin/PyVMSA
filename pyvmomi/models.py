@@ -51,7 +51,7 @@ class Datastore(models.Model):
 
 
 class Virtualmachine(models.Model):
-    datastore = models.ManyToManyField(Datastore, through='Storage', through_fields=('virtualmachine', 'datastore'))
+    host = models.ForeignKey('Host', on_delete=models.CASCADE)
     name = models.CharField(max_length=100, default='N/A')
     toolsStatus = models.CharField(max_length=100, default='N/A')
     guestFullName = models.CharField(max_length=200, default='N/A')
@@ -68,7 +68,7 @@ class Virtualmachine(models.Model):
 
 class Storage(models.Model):
     virtualmachine = models.ForeignKey(Virtualmachine, on_delete=models.CASCADE)
-    datastore = models.ForeignKey(Datastore, on_delete=models.CASCADE)
+    datastore = models.CharField(max_length=150, default='N/A')
     committed = models.BigIntegerField(default=0)
     uncommitted = models.BigIntegerField(default=0)
     unshared = models.BigIntegerField(default=0)
@@ -108,7 +108,7 @@ class Physicalnick(models.Model):
 class Portgroup(models.Model):
     virtualswitch = models.ForeignKey('Virtualswitch', on_delete=models.CASCADE)
     name = models.CharField(max_length=100, default='N/A')
-    vlanid = models.PositiveIntegerField(default=0)
+    vlanid = models.PositiveIntegerField()
     device = models.CharField(max_length=100, default='N/A')
     dhcp = models.CharField(max_length=100, default='N/A')
     ipaddress = models.CharField(max_length=100, default='N/A')

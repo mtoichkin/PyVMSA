@@ -121,7 +121,7 @@ def capture_db_host(vm_host, service_instance):
         print('failed  capture_db_host')
     return db_host
 
-def capture_db_datacenter(db_host, service_instance):
+def capture_db_datastore(db_host, service_instance):
     try:
         # Capture ESXi host Datastore
         # vim.Datastore
@@ -263,11 +263,51 @@ def capture_db_network(db_host, service_instance):
                                 db_portgroup.subnetmask = vnic.spec.ip.subnetMask
                                 db_portgroup.mac = vnic.spec.mac
 
-                        print("db_portgroup.save()")
+                        print("db_portgroup.save")
                         db_portgroup.save()
 
     except type:
         print('failed  capture_db_network')
+    return
+
+def capture_db_virtualmachine(db_host, service_instance):
+    try:
+
+        for datacenter in service_instance.content.rootFolder.childEntity:
+
+            # vim.VirtualMachine
+
+            for virtualmachine in datacenter.vmFolder.childEntity:
+
+                db_virtualmachine = Virtualmachine()
+                db_virtualmachine.host = db_host
+                db_virtualmachine.name = virtualmachine.name
+                db_virtualmachine.numcpu = virtualmachine.config.hardware.numCPU
+                db_virtualmachine.numcorepersocket = virtualmachine.config.hardware.numCoresPerSocket
+                db_virtualmachine.memorymb = virtualmachine.config.hardware.memoryMB
+                if virtualmachine.guest.guestFullName is not None:
+                    db_virtualmachine.guestFullName = virtualmachine.guest.guestFullName
+                else:
+                    db_virtualmachine.guestFullName = "N/A"
+                if virtualmachine.guest.guestState is not None:
+                    db_virtualmachine.guestState = virtualmachine.guest.guestState
+                else:
+                    db_virtualmachine.guestState = "N/A"
+                if virtualmachine.guest.hostName is not None:
+                    db_virtualmachine.hostName = virtualmachine.guest.hostName
+                else:
+                    db_virtualmachine.hostName = "N/A"
+                if virtualmachine.guest.ipAddress is not None:
+                    db_virtualmachine.ipAddress = virtualmachine.guest.ipAddress
+                else:
+                    db_virtualmachine.ipAddress = "N/A"
+                db_virtualmachine.toolsStatus = virtualmachine.guest.toolsStatus
+
+                print("db_virtualmachine.save")
+                db_virtualmachine.save()
+
+    except type:
+        print('failed  capture_db_virtualmachine')
     return
 
 def capture_db():
@@ -279,9 +319,9 @@ def capture_db():
             print("Host:{} skip".format(vm_host))
         else:
             db_host = capture_db_host(vm_host, service_instance)
-            capture_db_datacenter(db_host, service_instance)
+            capture_db_datastore(db_host, service_instance)
             capture_db_network(db_host, service_instance)
-
+            capture_db_virtualmachine(db_host, service_instance)
     print(db_host)
     Disconnect(service_instance)
 
