@@ -306,6 +306,41 @@ def capture_db_virtualmachine(db_host, service_instance):
                 print("db_virtualmachine.save")
                 db_virtualmachine.save()
 
+                for storage in virtualmachine.storage.perDatastoreUsage:
+                    db_storage = Storage()
+                    db_storage.virtualmachine = db_virtualmachine
+                    db_storage.datastore = storage.datastore
+                    db_storage.committed = storage.committed
+                    db_storage.uncommitted = storage.uncommitted
+                    db_storage.unshared = storage.unshared
+
+                    print("db_storage.save")
+                    db_storage.save()
+
+                for disk in virtualmachine.guest.disk:
+                    db_disk = Disk()
+                    db_disk.virtualmachine = db_virtualmachine
+                    db_disk.diskpath = disk.diskPath
+                    db_disk.capacity = disk.capacity
+                    db_disk.freespace = disk.freeSpace
+
+                    print("db_disk.save")
+                    db_disk.save()
+
+                for route in virtualmachine.guest.ipStack:
+
+                    for ip in route.ipRouteConfig.ipRoute:
+                        db_route = Route()
+                        db_route.virtualmachine = db_virtualmachine
+                        db_route.iproute = str(ip.network)+'/'+str(ip.prefixLength)
+                        if ip.gateway.ipAddress is not None:
+                            db_route.gateway = ip.gateway.ipAddress
+                        else:
+                            db_route.gateway = "N/A"
+
+                        print("db_route.save")
+                        db_route.save()
+
     except type:
         print('failed  capture_db_virtualmachine')
     return

@@ -76,7 +76,7 @@ class Storage(models.Model):
 
 class Disk(models.Model):
     virtualmachine = models.ForeignKey('Virtualmachine', on_delete=models.CASCADE)
-    discpath = models.CharField(max_length=100, default='N/A')
+    diskpath = models.CharField(max_length=100, default='N/A')
     capacity = models.BigIntegerField()
     freespace = models.BigIntegerField()
 

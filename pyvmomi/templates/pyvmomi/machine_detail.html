@@ -6,6 +6,13 @@
         <div>
             <h1>Virtual Machine {{machine}}</h1>
         </div>
+        <h2>Storage Information</h2>
+        <table>
+            <tr><th>Datastore</th><th>Committed</th><th>Uncommitted</th><th>Unshared</th></tr>
+            {% for strg in machine.storage_set.all %}
+                <tr><td>{{strg.datastore}}</td><td>{{strg.committed}}</td><td>{{strg.uncommitted}}</td><td>{{strg.unshared}}</td></tr>
+            {% endfor %}
+         </table>
         <h2>Guest Information</h2>
         <p><b>Tool Status: </b>{{machine.toolsStatus}}</p>
         <p><b>Guest Full Name: </b>{{machine.guestFullName}}</p>
@@ -13,9 +20,9 @@
         <p><b>Guest State: </b>{{machine.guestState}}</p>
         <p><b>IP Address: </b>{{machine.ipAddress}}</p>
         <table>
-            <tr><th>Disc Path</th><th>Capacity</th><th>Free Space</th></tr>
-            {% for disc in machine.disk_set.all %}
-                <tr><td>{{disc.discpath}}</td><td>{{disc.capacity}}</td><td>{{disc.freespace}}</td></tr>
+            <tr><th>Disk Path</th><th>Capacity</th><th>Free Space</th></tr>
+            {% for disk in machine.disk_set.all %}
+                <tr><td>{{disk.diskpath}}</td><td>{{disk.capacity}}</td><td>{{disk.freespace}}</td></tr>
             {% endfor %}
          </table>
         <table>
@@ -27,4 +34,5 @@
         <h2>Configuration Information</h2>
         <p><b>CPU Number:</b> {{machine.numcpu}} | <b>Cores per Socket:</b> {{machine.numcorepersocket}} | <b>Memory (MB):</b> {{machine.memorymb}}</p>
     </body>
+    <footer><a href="{% url 'machine_list'%}">Host</a></footer>
 </html>
