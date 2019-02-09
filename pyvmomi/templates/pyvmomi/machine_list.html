@@ -1,22 +1,20 @@
-<html>
-    <head>
-        <title>PyVMSA</title>
-    </head>
-    <body>
-        <div>
-            <h1>PyVMSA</h1>
-        </div>
+{% extends 'pyvmomi/base.html' %}
+{% block content %}
         {% for host in hosts %}
-            <div>
+            <div class="host">
                 <h2>{{ host.host_ip }}</h2>
-                <p><b>Данные от: {{ host.created_date }}</b></p>
+                <div class="date">
+                    <p><b>Данные от: {{ host.created_date }}</b></p>
+                </div>
+                <details>
+                    <summary>MORE</summary>
                 <p><b>About:</b> {{ host.host_fullname }}, {{ host.host_ostype }}, {{ host.host_productlineid }}, {{ host.host_apiversion }} </p>
                 <p><b>Compute:</b> {{ host.host_name }} | <b>Total CPU:</b> {{ host.host_totalcpu }} | <b>CPU Cores:</b> {{ host.host_numcpucores }} | <b>CPU Threads:</b> {{ host.host_numcputhreads }} | <b>Effective CPU:</b> {{ host.host_effectivecpu }}</p>
                 <p><b>Total Memory:</b> {{host.host_totalmemory }} | <b>Effective Memory:</b> {{ host.host_effectivememory }} </p>
                 <p><b>Overall Status:</b> {{ host.host_overallstatus }}</p>
                 <p><b>Data Stores</b></p>
-                <table border="1">
-                <tr><th>Name</th><th>Datastore</th><th>URL</th><th>Capacity</th><th>Free Space</th><th>Type</th></tr>
+                <table class="table table-bordered">
+                    <tr bgcolor="D4A8A5"><th>Name</th><th>Datastore</th><th>URL</th><th>Capacity</th><th>Free Space</th><th>Type</th></tr>
                     {% for dtstr in host.datastore_set.all %}
                     <tr><td>{{dtstr.name}}</td><td>{{dtstr.datastore}}</td><td>{{dtstr.url}}</td><td>{{dtstr.capacity}}</td><td>{{dtstr.freespace}}</td><td>{{dtstr.type}}</td></tr>
                     {% endfor %}
@@ -33,12 +31,12 @@
                         <li>{{vnick.name}}: <b>VLAN ID: </b> {{vnick.vlanid}}</li>
                         <p>Virtual Nic: <b>Device: </b> {{vnick.device}} | <b>DHCP: </b> {{vnick.dhcp}} | <b>IP Address: </b> {{vnick.ipaddress}} | <b>Subnet Mask: </b> {{vnick.subnetmask}} | <b>MAC: </b> {{vnick.mac}}</p>
                     {% endfor %}
-                {% endfor %}
+                {% endfor %}</details>
                 {% for vm in host.virtualmachine_set.all %}
                     <li><a href="{% url 'machine_detail' pk=vm.pk %}">{{ vm }}</a></li>
                 {% endfor %}
             </div>
         {% endfor %}
-    </body>
-</html>
+{% endblock %}
+
 
