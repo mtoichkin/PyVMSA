@@ -1,0 +1,28 @@
+{% load static %}
+<html>
+    <head>
+        <title>PyVMSA</title>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="{% static 'css/pyvmomi.css' %}">
+    </head>
+    <body>
+        <div class="page-header">
+            <form action='pyvmomi/machine_list.html' method="post">
+                {% csrf_token %}
+            <button type="submit" name='machine_list' id='machine_list' class="btn btn-outline-secondary">Update Information</button>
+            </form>
+            <a href="{% url 'machine_list'%}" class="btn btn-outline-secondary" role="button" aria-pressed="true">Home</a>
+            <h1>PyVMSA</h1>
+        </div>
+        <div class="content container">
+            <div class="row">
+                <div class="col-md-14">
+                    {% block content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
