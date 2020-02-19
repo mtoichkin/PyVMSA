@@ -19,6 +19,7 @@ class Host(models.Model):
     host_overallstatus = models.CharField(max_length=50, default='')
     created_date = models.DateTimeField(
             default=timezone.now)
+    host_check = models.BooleanField(default=True)
 
     '''def publish(self):
         self.created_date = timezone.now()
@@ -51,29 +52,37 @@ class Datastore(models.Model):
 
 
 class Virtualmachine(models.Model):
-    datastore = models.ManyToManyField('Datastore')
+    host = models.ForeignKey('Host', on_delete=models.CASCADE )
     name = models.CharField(max_length=100, default='N/A')
     toolsStatus = models.CharField(max_length=100, default='N/A')
     guestFullName = models.CharField(max_length=200, default='N/A')
     hostName = models.CharField(max_length=100, default='N/A')
     guestState = models.CharField(max_length=50, default='N/A')
     ipAddress = models.CharField(max_length=100, default='N/A')
-    numcpu = models.PositiveIntegerField()
-    numcorepersocket = models.PositiveIntegerField()
-    memorymb = models.PositiveIntegerField()
+    numcpu = models.PositiveIntegerField(default=0)
+    numcorepersocket = models.PositiveIntegerField(default=0)
+    memorymb = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.name
 
 
+class Storage(models.Model):
+    virtualmachine = models.ForeignKey(Virtualmachine, on_delete=models.CASCADE)
+    datastore = models.CharField(max_length=150, default='N/A')
+    committed = models.BigIntegerField(default=0)
+    uncommitted = models.BigIntegerField(default=0)
+    unshared = models.BigIntegerField(default=0)
+
+
 class Disk(models.Model):
     virtualmachine = models.ForeignKey('Virtualmachine', on_delete=models.CASCADE)
-    discpath = models.CharField(max_length=100, default='N/A')
+    diskpath = models.CharField(max_length=100, default='N/A')
     capacity = models.BigIntegerField()
     freespace = models.BigIntegerField()
 
     def __str__(self):
-        return self.discpath
+        return self.diskpath
 
 
 class Route(models.Model):
